@@ -1,0 +1,230 @@
+{
+  "info": {
+    "_postman_id": "63412e63-6d89-43be-baeb-844790f16686",
+    "name": "Craft - Data Sync",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "25686347"
+  },
+  "item": [
+    {
+      "name": "List Transactions",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{API_GATEWAY_URL}}/transaction",
+          "host": ["{{API_GATEWAY_URL}}"],
+          "path": ["transaction"]
+        }
+      },
+      "response": [
+        {
+          "name": "By ID",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{API_GATEWAY_URL}}/transaction?txnId[]=059e4f89-0bd5-4783-85ac-48656e4aa91b",
+              "host": ["{{API_GATEWAY_URL}}"],
+              "path": ["transaction"],
+              "query": [
+                {
+                  "key": "txnId[]",
+                  "value": "059e4f89-0bd5-4783-85ac-48656e4aa91b"
+                }
+              ]
+            }
+          },
+          "_postman_previewlanguage": null,
+          "header": null,
+          "cookie": [],
+          "body": null
+        }
+      ]
+    },
+    {
+      "name": "Get Transaction",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{API_GATEWAY_URL}}/transaction/:transactionId",
+          "host": ["{{API_GATEWAY_URL}}"],
+          "path": ["transaction", ":transactionId"],
+          "variable": [
+            {
+              "key": "transactionId",
+              "value": "059e4f89-0bd5-4783-85ac-48656e4aa91b"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Transaction",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"senderAddress\": \"0xb43feed5c346e4ed1c0a361f06d9dde39d43588d\",\n    \"recipientAddress\": \"0x4d1c65beea207c248f834e83d8614d63d38331a9\",\n    \"amount\": 720667.39063974,\n    \"transactionFee\": 132.12185605,\n    \"blockNumber\": 932023,\n    \"gasPrice\": 482.51072628,\n    \"gasLimit\": 978085\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{API_GATEWAY_URL}}/transaction",
+          "host": ["{{API_GATEWAY_URL}}"],
+          "path": ["transaction"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Transaction",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"blockNumber\": 15\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{API_GATEWAY_URL}}/transaction/:transactionId",
+          "host": ["{{API_GATEWAY_URL}}"],
+          "path": ["transaction", ":transactionId"],
+          "variable": [
+            {
+              "key": "transactionId",
+              "value": "3e191111-f946-4425-a130-3c25da0fbea2"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Sync Transactions",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [""],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{API_GATEWAY_URL}}/transaction/sync/:timestamp",
+          "host": ["{{API_GATEWAY_URL}}"],
+          "path": ["transaction", "sync", ":timestamp"],
+          "variable": [
+            {
+              "key": "timestamp",
+              "value": "0"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Transaction",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{API_GATEWAY_URL}}/transaction/:transactionId",
+          "host": ["{{API_GATEWAY_URL}}"],
+          "path": ["transaction", ":transactionId"],
+          "variable": [
+            {
+              "key": "transactionId",
+              "value": "e4730982-8f80-40f0-93d1-4ebf84535c3f"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Upload Transactions",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": "/Users/deko96/Projects/deko96/transactions-api/mock.json"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{API_GATEWAY_URL}}/transaction/upload",
+          "host": ["{{API_GATEWAY_URL}}"],
+          "path": ["transaction", "upload"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Download Transactions",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{API_GATEWAY_URL}}/transaction/download",
+          "host": ["{{API_GATEWAY_URL}}"],
+          "path": ["transaction", "download"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "API_GATEWAY_URL",
+      "value": "https://bf9b62jraa.execute-api.us-east-1.amazonaws.com/dev",
+      "type": "string"
+    }
+  ]
+}

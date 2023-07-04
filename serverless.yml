@@ -1,0 +1,149 @@
+service: transactions-api
+frameworkVersion: '3'
+
+plugins:
+  - serverless-jetpack
+
+custom:
+  aws:
+    region: ${env:AWS_REGION, 'us-east-1'}
+    profile: ${env.AWS_PROFILE, 'craft'}
+  rds:
+    dbName: craft
+    dbUser: craft
+
+package:
+  patterns:
+    - '!src/**'
+    - 'dist/**'
+    - 'package*.json'
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  timeout: 15
+  region: ${self:custom.aws.region}
+  environment:
+    RDS_DB_NAME: ${self:custom.rds.dbUser}
+    RDS_HOST: !GetAtt [Database, Endpoint.Address]
+    RDS_SECRET_ARN: !GetAtt [Database, MasterUserSecret.SecretArn]
+    NO_COLOR: true
+  iam:
+    role:
+      name: LambdaExecutionRole
+      statements:
+        - Effect: Allow
+          Action:
+            - 'secretsmanager:GetSecretValue'
+          Resource: !GetAtt [Database, MasterUserSecret.SecretArn]
+
+resources:
+  Resources:
+    VPC:
+      Type: AWS::EC2::VPC
+      Properties:
+        CidrBlock: '10.0.0.0/16'
+        EnableDnsHostnames: true
+        Tags:
+          - Key: Name
+            Value: ${self:service}-vpc
+    InternetGateway:
+      Type: AWS::EC2::InternetGateway
+      Properties:
+        Tags:
+          - Key: Name
+            Value: ${self:service}-igw
+    InternetGatewayAttachment:
+      Type: AWS::EC2::VPCGatewayAttachment
+      Properties:
+        InternetGatewayId: !Ref InternetGateway
+        VpcId: !Ref VPC
+    PublicSubnet1:
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId: !Ref VPC
+        AvailabilityZone: !Select [0, !GetAZs '']
+        CidrBlock: '10.0.1.0/24'
+        MapPublicIpOnLaunch: true
+        Tags:
+          - Key: Name
+            Value: ${self:service}-public-subnet-1
+    PublicSubnet2:
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId: !Ref VPC
+        AvailabilityZone: !Select [1, !GetAZs '']
+        CidrBlock: '10.0.2.0/24'
+        MapPublicIpOnLaunch: true
+        Tags:
+          - Key: Name
+            Value: ${self:service}-public-subnet-2
+    PublicRouteTable:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId: !Ref VPC
+        Tags:
+          - Key: Name
+            Value: ${self:service}-rt-public
+    PublicRouteDefault:
+      Type: AWS::EC2::Route
+      DependsOn: InternetGatewayAttachment
+      Properties:
+        RouteTableId: !Ref PublicRouteTable
+        DestinationCidrBlock: 0.0.0.0/0
+        GatewayId: !Ref InternetGateway
+    PublicSubnet1Association:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        RouteTableId: !Ref PublicRouteTable
+        SubnetId: !Ref PublicSubnet1
+    PublicSubnet2Association:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        RouteTableId: !Ref PublicRouteTable
+        SubnetId: !Ref PublicSubnet2
+    RDSSubnetGroup:
+      Type: AWS::RDS::DBSubnetGroup
+      DependsOn: InternetGatewayAttachment
+      Properties:
+        DBSubnetGroupDescription: ${self:service} database subnet group
+        SubnetIds:
+          - !Ref PublicSubnet1
+          - !Ref PublicSubnet2
+    SecurityGroup:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupDescription: RDS Security Group
+        VpcId: !Ref VPC
+        SecurityGroupIngress:
+          - IpProtocol: tcp
+            CidrIp: '0.0.0.0/0'
+            FromPort: 3306
+            ToPort: 3306
+        Tags:
+          - Key: Name
+            Value: ${self:service}-rds-sg
+    Database:
+      Type: AWS::RDS::DBInstance
+      Properties:
+        AllocatedStorage: '10'
+        DBInstanceClass: db.t3.micro
+        DBInstanceIdentifier: ${self:custom.rds.dbName}
+        DBName: ${self:custom.rds.dbName}
+        StorageType: gp2
+        MasterUsername: ${self:custom.rds.dbUser}
+        ManageMasterUserPassword: true
+        Engine: mysql
+        EngineVersion: 8.0.28
+        PubliclyAccessible: true
+        DBSubnetGroupName: !Ref RDSSubnetGroup
+        VPCSecurityGroups:
+          - !Ref SecurityGroup
+
+functions:
+  api:
+    handler: dist/lambda.handler
+    events:
+      - http:
+          method: any
+          path: /{proxy+}
